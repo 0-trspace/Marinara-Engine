@@ -4,9 +4,53 @@
 
 **An AI-powered chat & roleplay engine** — with conversation, roleplay, and visual novel modes, a full character & sprite system, 18 built-in AI agents, turn-based combat, lorebooks, and more.
 
-Everything runs locally. No accounts, no cloud, no telemetry. Connect to any OpenAI-compatible API (OpenAI, Anthropic, Google, OpenRouter, Mistral, Cohere, or any custom endpoint).
+Everything runs locally. No accounts, no cloud, no telemetry. Connect to any OpenAI-compatible API (OpenAI, Anthropic, Google, OpenRouter, Mistral, Cohere, or any custom endpoint, local included).
 
 > **⚠️ Alpha Software** — This is an early release. Expect rough edges, missing features, and breaking changes between versions. Bug reports and feedback are very welcome!
+
+---
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/chat-desktop.png" width="90%" alt="Roleplay Chat — Desktop" />
+  <br/>
+  <em>Roleplay Mode — Character sprites, custom backgrounds, weather effects, and AI agents</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/home-desktop.png" width="45%" alt="Home" />
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/character-editor.png" width="45%" alt="Character Editor" />
+</p>
+<p align="center">
+  <em>Home screen &nbsp;&nbsp;·&nbsp;&nbsp; Character editor with tags, metadata, and version history</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/presets-editor.png" width="45%" alt="Presets Editor" />
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/persona-colors.png" width="45%" alt="Persona Colors" />
+</p>
+<p align="center">
+  <em>Drag-and-drop prompt sections &nbsp;&nbsp;·&nbsp;&nbsp; Persona color customization with live preview</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/tutorial.png" width="45%" alt="Onboarding Tutorial" />
+</p>
+<p align="center">
+  <em>Guided onboarding with SillyTavern migration</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/home-mobile.png" width="30%" alt="Home — Mobile" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/screenshots/chat-mobile.png" width="30%" alt="Chat — Mobile" />
+</p>
+<p align="center">
+  <em>Fully responsive — works on phones and tablets via PWA</em>
+</p>
 
 ---
 
@@ -24,6 +68,7 @@ Everything runs locally. No accounts, no cloud, no telemetry. Connect to any Ope
 - Combined Tracker widget on mobile (Persona, Characters, Inventory, Quests).
 - Single-tap tooltips and double-tap editing for mobile world state widgets.
 - Direction-aware widget popover placement for left/right layouts.
+- Tap-to-toggle message action toolbar on mobile (edit, delete, peek prompt, etc.).
 
 **Changes:**
 - The app is now fully browser-based with PWA support. No desktop wrapper needed. Should work on Termux.
@@ -33,6 +78,7 @@ Everything runs locally. No accounts, no cloud, no telemetry. Connect to any Ope
 **Fixes:**
 - Various agent fixes, especially to Spotify DJ one.
 - Reworked prompts for agents.
+- Stop generation now properly aborts running agents and in-flight requests.
 - Installers fixed — Windows installer now preserves default path and enforces Node.js 20+.
 - Importing presets and chats now works correctly.
 - Agents dropdown no longer clipped by overflow containers in top view.
@@ -45,6 +91,12 @@ Everything runs locally. No accounts, no cloud, no telemetry. Connect to any Ope
 - React timer leak in Spotify agent polling fixed.
 - Sidebar border no longer shows when collapsed.
 - Various major and minor bug fixes.
+
+**Planned Next:**
+- OOC conversations about by your roleplays with their participants.
+- Natural chatting experience with the characters via Conversations mode.
+- Setting up harmonograms and autonomic responses for Conversation mode.
+- Discord integration.
 
 ---
 
