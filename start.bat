@@ -3,9 +3,9 @@ setlocal enabledelayedexpansion
 title Marinara Engine
 color 0A
 echo.
-echo  ╔══════════════════════════════════════════╗
-echo  ║       Marinara Engine  -  Launcher        ║
-echo  ╚══════════════════════════════════════════╝
+echo  +==========================================+
+echo  |       Marinara Engine  -  Launcher        |
+echo  +==========================================+
 echo.
 
 :: Check for Node.js
@@ -100,10 +100,10 @@ set PROTOCOL=http
 if defined SSL_CERT if defined SSL_KEY set PROTOCOL=https
 
 echo.
-echo  ══════════════════════════════════════════
+echo  ==========================================
 echo    Starting Marinara Engine on %PROTOCOL%://localhost:%PORT%
 echo    Press Ctrl+C to stop
-echo  ══════════════════════════════════════════
+echo  ==========================================
 echo.
 
 :: Open browser after a short delay (use explorer.exe as fallback)

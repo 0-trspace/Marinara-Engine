@@ -1,26 +1,26 @@
 @echo off
 setlocal enabledelayedexpansion
-title Marinara Engine — Installer
+title Marinara Engine - Installer
 color 0A
 
 echo.
-echo  ╔══════════════════════════════════════════╗
-echo  ║   Marinara Engine — Windows Installer     ║
-echo  ║   v1.3.0                                  ║
-echo  ╚══════════════════════════════════════════╝
+echo  +==========================================+
+echo  |   Marinara Engine - Windows Installer     |
+echo  |   v1.3.0                                  |
+echo  +==========================================+
 echo.
 
-:: ── Choose install location ──
+:: -- Choose install location --
 set "INSTALL_DIR=%USERPROFILE%\Marinara-Engine"
 set "USER_INPUT="
 set /p "USER_INPUT=  Install location [%INSTALL_DIR%]: "
 if not "%USER_INPUT%"=="" set "INSTALL_DIR=%USER_INPUT%"
 
-:: ── Check prerequisites ──
+:: -- Check prerequisites --
 echo.
 echo  [..] Checking prerequisites...
 
-:: ── Node.js ──
+:: -- Node.js --
 where node >nul 2>&1
 if errorlevel 1 goto :install_node
 for /f "tokens=1 delims=." %%a in ('node -v') do set "NODE_RAW=%%a"
@@ -30,7 +30,7 @@ if !NODE_MAJOR! LSS 20 goto :install_node
 goto :node_ok
 
 :install_node
-echo  [..] Node.js 20+ not found — downloading installer...
+echo  [..] Node.js 20+ not found - downloading installer...
 set "NODE_MSI=%TEMP%\node-lts-install.msi"
 powershell -Command "try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi' -OutFile '%NODE_MSI%' -UseBasicParsing } catch { exit 1 }"
 if errorlevel 1 echo  [ERROR] Failed to download Node.js. Please install manually from https://nodejs.org & pause & exit /b 1
@@ -47,13 +47,13 @@ echo  [OK] Node.js installed successfully
 echo  [OK] Node.js found:
 node -v
 
-:: ── Git ──
+:: -- Git --
 where git >nul 2>&1
 if errorlevel 1 goto :install_git
 goto :git_ok
 
 :install_git
-echo  [..] Git not found — downloading installer...
+echo  [..] Git not found - downloading installer...
 set "GIT_EXE=%TEMP%\git-install.exe"
 powershell -Command "try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $rel = Invoke-RestMethod -Uri 'https://api.github.com/repos/git-for-windows/git/releases/latest' -UseBasicParsing; $asset = $rel.assets | Where-Object { $_.name -match '64-bit\.exe$' } | Select-Object -First 1; Invoke-WebRequest -Uri $asset.browser_download_url -OutFile '%GIT_EXE%' -UseBasicParsing } catch { exit 1 }"
 if errorlevel 1 echo  [ERROR] Failed to download Git. Please install manually from https://git-scm.com & pause & exit /b 1
@@ -69,7 +69,7 @@ echo  [OK] Git installed successfully
 :git_ok
 echo  [OK] Git found
 
-:: ── Install pnpm if needed ──
+:: -- Install pnpm if needed --
 where pnpm >nul 2>&1
 if errorlevel 1 goto :install_pnpm
 goto :pnpm_ok
@@ -82,7 +82,7 @@ if errorlevel 1 echo  [ERROR] Failed to install pnpm. Please run: npm install -g
 :pnpm_ok
 echo  [OK] pnpm found
 
-:: ── Clone repository ──
+:: -- Clone repository --
 echo.
 if exist "%INSTALL_DIR%\.git" goto :update_repo
 echo  [..] Cloning Marinara Engine to %INSTALL_DIR%...
@@ -98,7 +98,7 @@ git pull
 
 :deps
 
-:: ── Install dependencies ──
+:: -- Install dependencies --
 echo.
 echo  [..] Installing dependencies (this may take a few minutes)...
 call pnpm install
@@ -109,7 +109,7 @@ if %errorlevel% neq 0 (
 )
 echo  [OK] Dependencies installed
 
-:: ── Build ──
+:: -- Build --
 echo.
 echo  [..] Building Marinara Engine...
 call pnpm build
@@ -120,12 +120,12 @@ if %errorlevel% neq 0 (
 )
 echo  [OK] Build complete
 
-:: ── Sync database ──
+:: -- Sync database --
 echo  [..] Setting up database...
 call pnpm db:push 2>nul
 echo  [OK] Database ready
 
-:: ── Create desktop shortcut ──
+:: -- Create desktop shortcut --
 echo  [..] Creating desktop shortcut...
 set "SHORTCUT=%USERPROFILE%\Desktop\Marinara Engine.lnk"
 set "VBS=%TEMP%\create_shortcut.vbs"
@@ -136,16 +136,16 @@ set "VBS=%TEMP%\create_shortcut.vbs"
     echo Set oLink = oWS.CreateShortcut^(sLinkFile^)
     echo oLink.TargetPath = "%INSTALL_DIR%\start.bat"
     echo oLink.WorkingDirectory = "%INSTALL_DIR%"
-    echo oLink.Description = "Marinara Engine — AI Chat ^& Roleplay"
+    echo oLink.Description = "Marinara Engine - AI Chat ^& Roleplay"
     echo oLink.Save
 ) > "%VBS%"
 cscript //nologo "%VBS%"
 del "%VBS%"
 echo  [OK] Desktop shortcut created
 
-:: ── Done ──
+:: -- Done --
 echo.
-echo  ══════════════════════════════════════════
+echo  ==========================================
 echo    Installation complete!
 echo.
 echo    To start: double-click "Marinara Engine"
@@ -154,12 +154,12 @@ echo    %INSTALL_DIR%
 echo.
 echo    The app opens in your browser at:
 echo    http://localhost:7860
-echo  ══════════════════════════════════════════
+echo  ==========================================
 echo.
 pause
 goto :eof
 
-:: ── Subroutine: refresh PATH from registry ──
+:: -- Subroutine: refresh PATH from registry --
 :refresh_path
 for /f "tokens=2*" %%A in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v Path 2^>nul') do set "SYS_PATH=%%B"
 for /f "tokens=2*" %%A in ('reg query "HKCU\Environment" /v Path 2^>nul') do set "USR_PATH=%%B"
