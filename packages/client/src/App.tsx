@@ -53,16 +53,34 @@ export function App() {
 
   useEffect(() => {
     if (!customFonts?.length) return;
-    const id = "marinara-custom-fonts";
-    let style = document.getElementById(id) as HTMLStyleElement | null;
-    if (!style) {
-      style = document.createElement("style");
-      style.id = id;
-      document.head.appendChild(style);
+
+    // Prefer FontFace API over injecting CSS into a <style> tag to avoid CSS injection
+    if (typeof FontFace === "undefined" || !document.fonts) {
+      return;
     }
-    style.textContent = customFonts
-      .map((f) => `@font-face { font-family: "${f.family}"; src: url("${f.url}"); font-display: swap; }`)
-      .join("\n");
+
+    customFonts.forEach((f) => {
+      if (!f.family || !f.url) {
+        return;
+      }
+
+      try {
+        const fontFace = new FontFace(f.family, `url("${f.url}")`, {
+          display: "swap",
+        });
+
+        fontFace
+          .load()
+          .then((loadedFace) => {
+            document.fonts.add(loadedFace);
+          })
+          .catch(() => {
+            // Ignore individual font load errors to avoid breaking others
+          });
+      } catch {
+        // Ignore construction errors for invalid font definitions
+      }
+    });
   }, [customFonts]);
 
   return (

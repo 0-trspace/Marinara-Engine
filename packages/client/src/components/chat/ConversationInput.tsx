@@ -29,10 +29,41 @@ interface Attachment {
 /** Convert a GIF (or any image) blob to PNG via canvas, returning a new Blob + data URL */
 async function convertToPng(blob: Blob): Promise<{ blob: Blob; dataUrl: string }> {
   const bitmap = await createImageBitmap(blob);
-  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(bitmap, 0, 0);
-  const pngBlob = await canvas.convertToBlob({ type: "image/png" });
+
+  let pngBlob: Blob;
+
+  // Prefer OffscreenCanvas when available, fall back to regular <canvas> for broader support (e.g., Safari/iOS).
+  if (typeof OffscreenCanvas !== "undefined") {
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Failed to get 2D context from OffscreenCanvas");
+    }
+    ctx.drawImage(bitmap, 0, 0);
+    pngBlob = await canvas.convertToBlob({ type: "image/png" });
+  } else {
+    const canvas = document.createElement("canvas");
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Failed to get 2D context from HTMLCanvasElement");
+    }
+    ctx.drawImage(bitmap, 0, 0);
+    pngBlob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (blobResult) => {
+          if (blobResult) {
+            resolve(blobResult);
+          } else {
+            reject(new Error("Failed to convert canvas to PNG blob"));
+          }
+        },
+        "image/png",
+      );
+    });
+  }
+
   const dataUrl = await new Promise<string>((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result as string);
@@ -148,8 +179,14 @@ export function ConversationInput({ characterNames = [] }: ConversationInputProp
       }
       setHasInput(false);
       clearInputDraft(activeChatId);
+      const currentAttachments = [...attachments];
       setAttachments([]);
-      createMessage.mutate({ role: "user", content: message, characterId: null });
+      createMessage.mutate({
+        role: "user",
+        content: message,
+        characterId: null,
+        ...(currentAttachments.length > 0 && { attachments: currentAttachments }),
+      });
       return;
     }
 

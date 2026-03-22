@@ -97,10 +97,10 @@ export function ChatInput({ mode = "conversation", characterNames = [] }: ChatIn
     if (!activeChatId || isStreaming) return false;
     const cached = qc.getQueryData<InfiniteData<Message[]>>(chatKeys.messages(activeChatId));
     if (!cached?.pages?.length) return false;
-    // First page (in reverse-chronological order) holds the newest messages;
-    // last element of that page is the most recent message.
-    const firstPage = cached.pages[0];
-    const lastMsg = firstPage?.[firstPage.length - 1];
+    // Flatten all pages to find the most recent message without assuming page ordering.
+    const allMessages = cached.pages.flatMap((page) => page ?? []);
+    if (!allMessages.length) return false;
+    const lastMsg = allMessages[allMessages.length - 1];
     return !!lastMsg && lastMsg.role === "user";
   }, [activeChatId, isStreaming, qc]);
 

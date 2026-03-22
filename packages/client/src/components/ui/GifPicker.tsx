@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────
-// UI: GIF Picker — Tenor-powered search popover
+// UI: GIF Picker — GIPHY-powered search popover
 // ──────────────────────────────────────────────
 import { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
@@ -31,7 +31,8 @@ export function GifPicker({ open, onClose, onSelect, anchorRef, containerRef }: 
   const [nextPos, setNextPos] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fetchingRef = useRef(false);
 
   // Position state for portal
   const [pos, setPos] = useState<{ bottom: number; right?: number; left?: number }>({ bottom: 0 });
@@ -85,6 +86,8 @@ export function GifPicker({ open, onClose, onSelect, anchorRef, containerRef }: 
   }, [open, onClose]);
 
   const fetchGifs = useCallback(async (q: string, pos?: string) => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -107,6 +110,7 @@ export function GifPicker({ open, onClose, onSelect, anchorRef, containerRef }: 
       setError(err instanceof Error ? err.message : "Failed to fetch GIFs");
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   }, []);
 
@@ -220,7 +224,7 @@ export function GifPicker({ open, onClose, onSelect, anchorRef, containerRef }: 
         )}
       </div>
 
-      {/* Tenor attribution */}
+      {/* GIPHY attribution */}
       <div className="flex items-center justify-center border-t border-[var(--border)] px-3 py-1.5">
         <span className="text-[0.5625rem] text-[var(--muted-foreground)]/60">Powered by GIPHY</span>
       </div>

@@ -1,6 +1,7 @@
 // ──────────────────────────────────────────────
 // Layout: Right Panel (polished with panel transitions)
 // ──────────────────────────────────────────────
+import { useEffect } from "react";
 import { X, Users, BookOpen, FileText, Link, Sparkles, Settings, UserCircle } from "lucide-react";
 import { useUIStore } from "../../stores/ui.store";
 import { CharactersPanel } from "../panels/CharactersPanel";
@@ -38,7 +39,9 @@ export function RightPanel() {
   const panel = useUIStore((s) => s.rightPanel);
   const close = useUIStore((s) => s.closeRightPanel);
 
-  mountedPanels.add(panel);
+  useEffect(() => {
+    mountedPanels.add(panel);
+  }, [panel]);
 
   const config = PANEL_CONFIG[panel] ?? { title: "Panel", icon: null, gradient: "from-slate-400 to-slate-500" };
 
@@ -71,8 +74,8 @@ export function RightPanel() {
           return (
             <div
               key={key}
-              className="absolute inset-0 overflow-y-auto"
-              style={active ? undefined : { clipPath: "inset(100%)", pointerEvents: "none" }}
+              className={`absolute inset-0 overflow-y-auto ${active ? "" : "hidden"}`}
+              aria-hidden={!active}
             >
               <PanelComp />
             </div>

@@ -40,8 +40,8 @@ export function useAutonomousMessaging(
 ) {
   const { generate } = useGenerate();
   const qc = useQueryClient();
-  const pollTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const busyTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const busyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const generatingRef = useRef(false);
   const onAutonomousMessageRef = useRef(onAutonomousMessage);
   onAutonomousMessageRef.current = onAutonomousMessage;
@@ -192,7 +192,7 @@ export function useAutonomousMessaging(
     };
 
     const schedulePoll = () => {
-      clearTimeout(pollTimerRef.current);
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
       pollTimerRef.current = setTimeout(poll, 30_000); // Poll every 30 seconds
     };
 
@@ -200,8 +200,8 @@ export function useAutonomousMessaging(
     pollTimerRef.current = setTimeout(poll, 10_000);
 
     return () => {
-      clearTimeout(pollTimerRef.current);
-      clearTimeout(busyTimerRef.current);
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+      if (busyTimerRef.current) clearTimeout(busyTimerRef.current);
     };
   }, [chatId, enabled, generate, recordAssistantActivity, qc]);
 
