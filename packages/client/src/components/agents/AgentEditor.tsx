@@ -1046,9 +1046,7 @@ export function AgentEditor() {
                 <strong className="text-[var(--foreground)]">DB Status:</strong>{" "}
                 {dbConfig ? `Persisted (ID: ${dbConfig.id})` : "Not yet saved — click Save to persist"}
               </p>
-              <p className="text-[var(--muted-foreground)]">
-                Add this agent to a Roleplay chat to use it.
-              </p>
+              <p className="text-[var(--muted-foreground)]">Add this agent to a Roleplay chat to use it.</p>
             </div>
           </div>
         </div>

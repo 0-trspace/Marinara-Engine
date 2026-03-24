@@ -895,9 +895,7 @@ export function ConnectionEditor() {
                 >
                   <option value="">Same as this connection</option>
                   {((allConnections ?? []) as Record<string, unknown>[])
-                    .filter(
-                      (c) => c.id !== connectionDetailId && c.provider !== "image_generation",
-                    )
+                    .filter((c) => c.id !== connectionDetailId && c.provider !== "image_generation")
                     .map((c) => (
                       <option key={c.id as string} value={c.id as string}>
                         {c.name as string}
