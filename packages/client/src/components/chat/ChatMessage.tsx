@@ -117,6 +117,10 @@ interface ChatMessageProps {
 const HEADING_RE = /^(#{1,6})\s+(.+)$/;
 /** Regex to match horizontal rules: *** / --- (3+ chars, standalone line). */
 const HR_LINE_RE = /^(?:\*{3,}|-{3,})$/;
+/** Regex to match markdown images: ![alt](url) */
+const MD_IMAGE_RE = /!\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g;
+/** Regex to match a standalone image line (entire line is just one image). */
+const MD_IMAGE_LINE_RE = /^!\[([^\]]*)\]\((https?:\/\/[^)]+)\)$/;
 
 /**
  * Split text into heading / horizontal-rule and non-heading segments,
@@ -150,6 +154,18 @@ function renderWithHeadings(text: string, renderSegment: (segment: string) => Re
     } else if (HR_LINE_RE.test(line.trim())) {
       flushBuffer();
       segments.push(<hr key={`hr${key++}`} className="my-3 border-t border-[var(--border)]" />);
+    } else if (MD_IMAGE_LINE_RE.test(line.trim())) {
+      flushBuffer();
+      const m = MD_IMAGE_LINE_RE.exec(line.trim())!;
+      segments.push(
+        <img
+          key={`img${key++}`}
+          src={m[2]}
+          alt={m[1] || ""}
+          className="my-1 max-w-full rounded-lg sm:max-w-md"
+          loading="lazy"
+        />,
+      );
     } else {
       buffer.push(line);
     }
@@ -210,8 +226,8 @@ function renderWithSpeakerTags(
  * Returns an array of ReactNodes.
  */
 function applyInlineMarkdown(text: string, keyPrefix: string): ReactNode[] {
-  // Match **bold** first, then *italic* (order matters to avoid conflict)
-  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*)/g;
+  // Match images, **bold**, and *italic* (order matters)
+  const regex = /(!\[([^\]]*)\]\((https?:\/\/[^)]+)\)|\*\*(.+?)\*\*|\*(.+?)\*)/g;
   const nodes: ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -221,12 +237,23 @@ function applyInlineMarkdown(text: string, keyPrefix: string): ReactNode[] {
     if (match.index > lastIndex) {
       nodes.push(text.slice(lastIndex, match.index));
     }
-    if (match[2] != null) {
+    if (match[2] != null && match[3] != null) {
+      // ![alt](url)
+      nodes.push(
+        <img
+          key={`${keyPrefix}img${key++}`}
+          src={match[3]}
+          alt={match[2] || ""}
+          className="my-1 inline-block max-w-full rounded-lg align-bottom sm:max-w-md"
+          loading="lazy"
+        />,
+      );
+    } else if (match[4] != null) {
       // **bold**
-      nodes.push(<strong key={`${keyPrefix}b${key++}`}>{match[2]}</strong>);
-    } else if (match[3] != null) {
+      nodes.push(<strong key={`${keyPrefix}b${key++}`}>{match[4]}</strong>);
+    } else if (match[5] != null) {
       // *italic*
-      nodes.push(<em key={`${keyPrefix}i${key++}`}>{match[3]}</em>);
+      nodes.push(<em key={`${keyPrefix}i${key++}`}>{match[5]}</em>);
     }
     lastIndex = match.index + match[0].length;
   }
@@ -328,8 +355,16 @@ function renderContent(
     styleBlock ? styleBlock : pre ? `${pre}${post}` : '<br style="display:block;margin:0.2em 0">',
   );
 
+  // Convert markdown images to <img> before sanitization so DOMPurify validates them.
+  // Keep tags minimal (no class/loading) — styling is via .mari-message-content img in CSS
+  // to avoid the dialogue-bolding regex mangling attribute quotes.
+  const withImages = withBreaks.replace(
+    /!\[([^\]]*)\]\((https?:\/\/[^)]+)\)/g,
+    (_m, alt: string, url: string) => `<img src="${url}" alt="${alt || "image"}">`,
+  );
+
   // Content has HTML — sanitize and render it
-  const clean = DOMPurify.sanitize(withBreaks, {
+  const clean = DOMPurify.sanitize(withImages, {
     ADD_ATTR: ["style", "class"],
     ALLOW_DATA_ATTR: true,
   });
