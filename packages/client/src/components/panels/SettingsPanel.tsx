@@ -1713,6 +1713,8 @@ function AdvancedSettings() {
     currentBuild: string;
     latestVersion: string;
     updateAvailable: boolean;
+    versionUpdate?: boolean;
+    commitsBehind?: number;
     releaseUrl: string;
     releaseNotes: string;
     publishedAt: string;
@@ -1786,17 +1788,23 @@ function AdvancedSettings() {
         {updateCheck.data?.updateAvailable && (
           <div className="flex flex-col gap-2 rounded-lg bg-[var(--secondary)] p-2.5 ring-1 ring-[var(--border)]">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">v{updateCheck.data.latestVersion} available</span>
-              <a
-                href={updateCheck.data.releaseUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[0.625rem] text-[var(--primary)] hover:underline"
-              >
-                Release notes <ExternalLink size="0.625rem" />
-              </a>
+              <span className="text-xs font-medium">
+                {updateCheck.data.versionUpdate
+                  ? `v${updateCheck.data.latestVersion} available`
+                  : `${updateCheck.data.commitsBehind ?? 1} new update${(updateCheck.data.commitsBehind ?? 1) !== 1 ? "s" : ""} available`}
+              </span>
+              {updateCheck.data.versionUpdate && (
+                <a
+                  href={updateCheck.data.releaseUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[0.625rem] text-[var(--primary)] hover:underline"
+                >
+                  Release notes <ExternalLink size="0.625rem" />
+                </a>
+              )}
             </div>
-            {updateCheck.data.releaseNotes && (
+            {updateCheck.data.versionUpdate && updateCheck.data.releaseNotes && (
               <p className="text-[0.625rem] text-[var(--muted-foreground)] line-clamp-4 whitespace-pre-wrap">
                 {updateCheck.data.releaseNotes}
               </p>

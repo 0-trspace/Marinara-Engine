@@ -28,10 +28,33 @@ let cachedRelease: {
 let cacheTimestamp = 0;
 const CACHE_TTL_MS = 15 * 60_000;
 
+// ── Cached commit-level check (5-min TTL) ──
+let cachedCommitsBehind: number | null = null;
+let commitCheckTimestamp = 0;
+const COMMIT_CHECK_TTL_MS = 5 * 60_000;
+
 /** Detect whether this install is a git repo. */
 function isGitInstall(): boolean {
   const monorepoRoot = getMonorepoRoot();
   return existsSync(resolve(monorepoRoot, ".git"));
+}
+
+/** Check how many commits behind origin/main the local HEAD is. Returns 0 if up to date, null on error. */
+async function getCommitsBehind(): Promise<number | null> {
+  if (!isGitInstall()) return null;
+  const root = getMonorepoRoot();
+  try {
+    // Fetch latest refs from origin (lightweight, no checkout)
+    await execFileAsync("git", ["fetch", "origin", "--quiet"], { cwd: root, timeout: 15_000 });
+    const { stdout } = await execFileAsync(
+      "git",
+      ["rev-list", "--count", "HEAD..origin/main"],
+      { cwd: root, timeout: 5_000 },
+    );
+    return parseInt(stdout.trim(), 10) || 0;
+  } catch {
+    return null;
+  }
 }
 
 /** Compare semver strings. Returns true if b > a. */
@@ -136,20 +159,37 @@ export async function updatesRoutes(app: FastifyInstance) {
   // GET /api/updates/check
   // Fetches the newest stable Git tag from GitHub, then hydrates it
   // with matching release metadata when that release exists.
+  // For git installs, also checks if the local commit is behind origin/main.
   app.get("/check", async (_req, reply) => {
     const now = Date.now();
     const currentCommit = getBuildCommit();
     const currentBuild = getBuildLabel();
+    const gitInstall = isGitInstall();
 
-    // Return cached if fresh
+    // Check commits behind for git installs
+    let commitsBehind: number | null = null;
+    if (gitInstall) {
+      if (cachedCommitsBehind !== null && now - commitCheckTimestamp < COMMIT_CHECK_TTL_MS) {
+        commitsBehind = cachedCommitsBehind;
+      } else {
+        commitsBehind = await getCommitsBehind();
+        cachedCommitsBehind = commitsBehind;
+        commitCheckTimestamp = now;
+      }
+    }
+
+    // Return cached release info if fresh
     if (cachedRelease && now - cacheTimestamp < CACHE_TTL_MS) {
+      const versionUpdate = isNewerVersion(APP_VERSION, cachedRelease.latestVersion);
       return {
         currentVersion: APP_VERSION,
         currentCommit,
         currentBuild,
         ...cachedRelease,
-        updateAvailable: isNewerVersion(APP_VERSION, cachedRelease.latestVersion),
-        installType: isGitInstall() ? "git" : "standalone",
+        updateAvailable: versionUpdate || (commitsBehind != null && commitsBehind > 0),
+        versionUpdate,
+        commitsBehind: commitsBehind ?? 0,
+        installType: gitInstall ? "git" : "standalone",
       };
     }
 
@@ -163,13 +203,16 @@ export async function updatesRoutes(app: FastifyInstance) {
       }
       cacheTimestamp = now;
 
+      const versionUpdate = isNewerVersion(APP_VERSION, cachedRelease.latestVersion);
       return {
         currentVersion: APP_VERSION,
         currentCommit,
         currentBuild,
         ...cachedRelease,
-        updateAvailable: isNewerVersion(APP_VERSION, cachedRelease.latestVersion),
-        installType: isGitInstall() ? "git" : "standalone",
+        updateAvailable: versionUpdate || (commitsBehind != null && commitsBehind > 0),
+        versionUpdate,
+        commitsBehind: commitsBehind ?? 0,
+        installType: gitInstall ? "git" : "standalone",
       };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -178,7 +221,8 @@ export async function updatesRoutes(app: FastifyInstance) {
         currentVersion: APP_VERSION,
         currentCommit,
         currentBuild,
-        updateAvailable: false,
+        updateAvailable: commitsBehind != null && commitsBehind > 0,
+        commitsBehind: commitsBehind ?? 0,
       });
     }
   });
@@ -206,21 +250,30 @@ export async function updatesRoutes(app: FastifyInstance) {
 
       const alreadyUpToDate = pullOut.includes("Already up to date");
 
-      // Even if git says "already up to date", the dist might be stale
-      // (e.g. a previous update pulled code but failed to build).
-      // Compare package.json version with the running APP_VERSION.
+      // If git says "already up to date", check if the source actually differs
+      // from the running build (e.g. previous update pulled code but failed to build,
+      // or the running dist is from a stale commit).
       if (alreadyUpToDate) {
-        const { readFileSync } = await import("fs");
+        const currentCommitHash = getBuildCommit();
+        let sourceCommit: string | null = null;
         try {
-          const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf-8"));
-          const sourceVersion = pkg.version as string;
-          if (sourceVersion === APP_VERSION) {
+          const { stdout } = await execFileAsync("git", ["rev-parse", "--short=7", "HEAD"], { cwd: root, timeout: 5_000 });
+          sourceCommit = stdout.trim() || null;
+        } catch { /* ignore */ }
+
+        // If the commit we're running matches HEAD and version matches, truly up to date
+        if (sourceCommit && currentCommitHash && sourceCommit === currentCommitHash) {
+          const { readFileSync } = await import("fs");
+          try {
+            const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf-8"));
+            if ((pkg.version as string) === APP_VERSION) {
+              return { status: "already_up_to_date", message: "Already on the latest version." };
+            }
+          } catch {
             return { status: "already_up_to_date", message: "Already on the latest version." };
           }
-          // Source has a newer version than running dist — need to rebuild
-        } catch {
-          return { status: "already_up_to_date", message: "Already on the latest version." };
         }
+        // Otherwise, source differs from running build — need to rebuild
       }
 
       // Step 2: pnpm install
