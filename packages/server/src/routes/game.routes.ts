@@ -235,16 +235,26 @@ async function resolveConnection(
 /** Build model-aware generation options for game calls. */
 function gameGenOptions(model: string, overrides: Partial<ChatOptions> = {}): ChatOptions {
   const m = model.toLowerCase();
-  const supportsXhigh = m.startsWith("gpt-5.4");
-  return {
+  // Opus 4.7+ and GPT-5.4 accept the strongest reasoning tier ("xhigh").
+  // Opus 4.7+ also forbids sampling parameters entirely; the Anthropic
+  // provider strips them on the wire, but we omit them here so the
+  // logged options match what is actually sent.
+  const isOpus47Plus = /claude-opus-4-(?:[7-9]|\d{2,})/.test(m);
+  const supportsXhigh = m.startsWith("gpt-5.4") || isOpus47Plus;
+  const base: ChatOptions = {
     model,
-    temperature: 1,
     maxTokens: 8192,
-    topP: 1,
     reasoningEffort: supportsXhigh ? "xhigh" : "high",
+    // Required for the Anthropic provider to actually attach
+    // thinking/output_config.effort to the request body.
+    enableThinking: true,
     verbosity: "high",
-    ...overrides,
   };
+  if (!isOpus47Plus) {
+    base.temperature = 1;
+    base.topP = 1;
+  }
+  return { ...base, ...overrides };
 }
 
 /** Strip <think>/<thinking> reasoning tags that some models emit inline. */
