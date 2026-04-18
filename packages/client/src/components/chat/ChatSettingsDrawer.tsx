@@ -3148,8 +3148,8 @@ const CHAT_PARAM_DEFAULTS: Required<ChatParameters> = {
   topK: 0,
   frequencyPenalty: 0,
   presencePenalty: 0,
-  reasoningEffort: null,
-  verbosity: null,
+  reasoningEffort: "maximum",
+  verbosity: "high",
 };
 
 const ROLEPLAY_PARAM_DEFAULTS: Required<ChatParameters> = {
@@ -3159,8 +3159,8 @@ const ROLEPLAY_PARAM_DEFAULTS: Required<ChatParameters> = {
   topK: 0,
   frequencyPenalty: 0,
   presencePenalty: 0,
-  reasoningEffort: null,
-  verbosity: null,
+  reasoningEffort: "maximum",
+  verbosity: "high",
 };
 
 const DEFAULT_CONVERSATION_PROMPT = `<role>
@@ -3333,7 +3333,7 @@ function AdvancedParametersSection({
               <div className="mt-1 flex gap-1.5">
                 {([null, "low", "medium", "high", "maximum"] as const).map((level) => (
                   <button
-                    key={level ?? "auto"}
+                    key={level ?? "none"}
                     onClick={() => set("reasoningEffort", level)}
                     className={cn(
                       "rounded-lg px-2 py-1 text-[0.625rem] font-medium transition-all",
@@ -3342,7 +3342,7 @@ function AdvancedParametersSection({
                         : "bg-[var(--secondary)] text-[var(--muted-foreground)] ring-1 ring-[var(--border)] hover:bg-[var(--accent)]",
                     )}
                   >
-                    {level ? level.charAt(0).toUpperCase() + level.slice(1) : "Auto"}
+                    {level ? level.charAt(0).toUpperCase() + level.slice(1) : "None"}
                   </button>
                 ))}
               </div>
@@ -3358,7 +3358,7 @@ function AdvancedParametersSection({
               <div className="mt-1 flex gap-1.5">
                 {([null, "low", "medium", "high"] as const).map((level) => (
                   <button
-                    key={level ?? "auto"}
+                    key={level ?? "none"}
                     onClick={() => set("verbosity", level)}
                     className={cn(
                       "rounded-lg px-2 py-1 text-[0.625rem] font-medium transition-all",
@@ -3367,7 +3367,7 @@ function AdvancedParametersSection({
                         : "bg-[var(--secondary)] text-[var(--muted-foreground)] ring-1 ring-[var(--border)] hover:bg-[var(--accent)]",
                     )}
                   >
-                    {level ? level.charAt(0).toUpperCase() + level.slice(1) : "Auto"}
+                    {level ? level.charAt(0).toUpperCase() + level.slice(1) : "None"}
                   </button>
                 ))}
               </div>
