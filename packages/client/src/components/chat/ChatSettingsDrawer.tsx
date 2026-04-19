@@ -2591,27 +2591,18 @@ export function ChatSettingsDrawer({
               icon={<CalendarClock size="0.875rem" />}
               help="Past-day conversations are auto-summarized and rolled up into weekly summaries. These summaries are injected into future prompts so characters remember what happened. Use this editor to review and correct what gets remembered."
             >
-              {(() => {
-                const dayCount = Object.keys(metadata.daySummaries ?? {}).length;
-                const weekCount = Object.keys(metadata.weekSummaries ?? {}).length;
-                const totalCount = dayCount + weekCount;
-                return (
-                  <button
-                    onClick={() => setShowSummariesModal(true)}
-                    className="flex w-full items-center justify-between rounded-lg bg-[var(--secondary)] px-3 py-2.5 text-left transition-all hover:bg-[var(--accent)]"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[0.6875rem] font-medium">Edit Summaries</span>
-                      <p className="text-[0.625rem] text-[var(--muted-foreground)]">
-                        {totalCount === 0
-                          ? "No summaries yet — they appear as the conversation spans multiple days."
-                          : `${totalCount} active ${totalCount === 1 ? "entry" : "entries"}. Review and edit what characters remember.`}
-                      </p>
-                    </div>
-                    <Pencil size="0.875rem" className="shrink-0 text-[var(--muted-foreground)]" />
-                  </button>
-                );
-              })()}
+              <button
+                onClick={() => setShowSummariesModal(true)}
+                className="flex w-full items-center justify-between rounded-lg bg-[var(--secondary)] px-3 py-2.5 text-left transition-all hover:bg-[var(--accent)]"
+              >
+                <div className="flex-1 min-w-0">
+                  <span className="text-[0.6875rem] font-medium">Edit Summaries</span>
+                  <p className="text-[0.625rem] text-[var(--muted-foreground)]">
+                    Review and edit what characters remember.
+                  </p>
+                </div>
+                <Pencil size="0.875rem" className="shrink-0 text-[var(--muted-foreground)]" />
+              </button>
             </Section>
           )}
 

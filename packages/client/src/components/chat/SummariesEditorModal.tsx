@@ -1,12 +1,37 @@
 // ──────────────────────────────────────────────
 // Summaries Editor Modal — edit auto-generated day/week summaries
 // ──────────────────────────────────────────────
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { X, Plus, Trash2, CalendarClock } from "lucide-react";
 import { cn } from "../../lib/utils";
 import type { Chat, ChatMetadata, DaySummaryEntry, WeekSummaryEntry } from "@marinara-engine/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { chatKeys, useUpdateChatSummaries } from "../../hooks/use-chats";
+
+interface AutoSizingTextareaProps {
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+}
+
+function AutoSizingTextarea({ value, onChange, className }: AutoSizingTextareaProps) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      rows={1}
+      className={cn("resize-none overflow-hidden", className)}
+    />
+  );
+}
 
 interface SummariesEditorModalProps {
   chat: Chat;
@@ -233,11 +258,10 @@ export function SummariesEditorModal({ chat, open, onClose }: SummariesEditorMod
                 {/* Summary textarea */}
                 <div className="space-y-1">
                   <label className="text-[0.625rem] font-medium text-[var(--muted-foreground)]">Summary</label>
-                  <textarea
+                  <AutoSizingTextarea
                     value={current.summary}
-                    onChange={(e) => updateEntry(entry.kind, entry.key, { ...current, summary: e.target.value })}
-                    rows={Math.min(10, Math.max(3, current.summary.split("\n").length + 1))}
-                    className="w-full resize-y rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-[0.75rem] leading-relaxed text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none"
+                    onChange={(next) => updateEntry(entry.kind, entry.key, { ...current, summary: next })}
+                    className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-[0.75rem] leading-relaxed text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none"
                   />
                 </div>
 
@@ -250,15 +274,14 @@ export function SummariesEditorModal({ chat, open, onClose }: SummariesEditorMod
                   <div className="space-y-1.5">
                     {current.keyDetails.map((detail, i) => (
                       <div key={i} className="flex gap-1.5">
-                        <textarea
+                        <AutoSizingTextarea
                           value={detail}
-                          onChange={(e) => {
+                          onChange={(next) => {
                             const nextDetails = [...current.keyDetails];
-                            nextDetails[i] = e.target.value;
+                            nextDetails[i] = next;
                             updateEntry(entry.kind, entry.key, { ...current, keyDetails: nextDetails });
                           }}
-                          rows={Math.min(6, Math.max(1, detail.split("\n").length))}
-                          className="flex-1 resize-y rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-[0.75rem] leading-relaxed text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none"
+                          className="flex-1 rounded-md border border-[var(--border)] bg-[var(--background)] px-2 py-1.5 text-[0.75rem] leading-relaxed text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none"
                         />
                         <button
                           onClick={() => {
