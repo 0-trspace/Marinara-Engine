@@ -460,7 +460,7 @@ export function PersonasPanel() {
           )}
           title="Select"
         >
-          <Download size="0.75rem" />
+          <Check size="0.75rem" />
           <span className="md:hidden">Select</span>
         </button>
       </div>

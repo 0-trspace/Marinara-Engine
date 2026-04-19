@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   Plus,
   Download,
+  Check,
   Sparkles,
   BookOpen,
   Search,
@@ -229,7 +230,7 @@ export function LorebooksPanel() {
           )}
           title="Select"
         >
-          <Download size="0.8125rem" /> <span className="md:hidden">Select</span>
+          <Check size="0.8125rem" /> <span className="md:hidden">Select</span>
         </button>
       </div>
 
