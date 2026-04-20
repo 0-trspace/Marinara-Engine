@@ -140,7 +140,7 @@ git --version  # should show git version 2.x+
 
 ```bat
 git clone https://github.com/Pasta-Devs/Marinara-Engine.git
-cd marinara-engine
+cd Marinara-Engine
 start.bat
 ```
 
@@ -148,7 +148,7 @@ start.bat
 
 ```bash
 git clone https://github.com/Pasta-Devs/Marinara-Engine.git
-cd marinara-engine
+cd Marinara-Engine
 chmod +x start.sh
 ./start.sh
 ```
@@ -158,7 +158,7 @@ chmod +x start.sh
 Install [Termux](https://f-droid.org/en/packages/com.termux/) from F-Droid (the Play Store version is outdated), then run:
 
 ```bash
-pkg update && pkg install -y git nodejs-lts && git clone https://github.com/Pasta-Devs/Marinara-Engine.git && cd marinara-engine && chmod +x start-termux.sh && ./start-termux.sh
+pkg update && pkg install -y git nodejs-lts && git clone https://github.com/Pasta-Devs/Marinara-Engine.git && cd Marinara-Engine && chmod +x start-termux.sh && ./start-termux.sh
 ```
 
 The Termux launcher downloads the prebuilt SQLite native module when available, installs dependencies, builds the app, and starts the server at `http://127.0.0.1:<PORT>` using the resolved `PORT` value from `.env` or the default `7860`. First run takes a few minutes on mobile. After that, run `./start-termux.sh` to start again.
