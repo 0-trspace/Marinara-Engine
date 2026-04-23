@@ -3,7 +3,7 @@
 # ──────────────────────────────────────────────
 # Triggers:
 #   • Tag v*  → ghcr.io/pasta-devs/marinara-engine:1.5.4-lite + :lite
-#
+#   • Manual workflow_dispatch
 # NOT triggered on push to main — lite images are only published
 # alongside versioned releases.
 # ──────────────────────────────────────────────
@@ -12,6 +12,7 @@ name: Build & Push Lite Container Image
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 concurrency:
   group: image-lite-${{ github.ref }}
