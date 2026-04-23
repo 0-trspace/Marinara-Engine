@@ -1041,6 +1041,12 @@ export function GameSurface({
       setQueuedQte({ qte: tags.qte, messageId: msg.id });
     }
 
+    // Choice tags always from the main model (must be set before scene branching
+    // so they appear regardless of sidecar / connection / inline path)
+    if (tags.choices) {
+      setActiveChoices(tags.choices);
+    }
+
     // Scene wrap-up: handle bg, music, sfx, ambient, widgets, state changes
     // Widget updates always come from the GM model (not sidecar), apply them immediately
     for (const wu of tags.widgetUpdates) {
@@ -1254,10 +1260,6 @@ export function GameSurface({
         useGameAssetStore.getState().setCurrentBackground(pick);
       }
     }
-    if (gmTags.choices) {
-      setActiveChoices(gmTags.choices);
-    }
-
     // Scene effects are applied — ungate narration
     sceneReadyMsgIdRef.current = msg.id;
     setSceneReadyTick((t) => t + 1);
@@ -2710,7 +2712,9 @@ export function GameSurface({
                             style={{ writingMode: "vertical-lr", direction: "rtl" }}
                           />
                         </div>
-                        <span className="text-[10px] tabular-nums text-white/50">{audioMuted ? "M" : masterVolume}</span>
+                        <span className="text-[10px] tabular-nums text-white/50">
+                          {audioMuted ? "M" : masterVolume}
+                        </span>
                         <button
                           onClick={handleToggleMute}
                           className={cn(
