@@ -48,6 +48,29 @@ function getText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function getCharacterTags(char: ParsedCharacterRow): string[] {
+  return (Array.isArray(char.parsed.tags) ? char.parsed.tags : []).filter(
+    (tag): tag is string => typeof tag === "string" && tag.trim().length > 0,
+  );
+}
+
+function parseCharacterSearchQuery(value: string) {
+  const excludedTags: string[] = [];
+  const text = value
+    .replace(/(?:^|\s)(?:-|!)(?:tag:|#)?(?:"([^"]+)"|(\S+))/gi, (_match, quoted: string, bare: string) => {
+      const tag = (quoted ?? bare ?? "").trim();
+      if (tag) excludedTags.push(tag.toLowerCase());
+      return " ";
+    })
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return {
+    text: text.toLowerCase(),
+    excludedTags,
+  };
+}
+
 function getCharacterSummary(char: ParsedCharacterRow) {
   const creatorNotes = getText(char.parsed.creator_notes);
   if (creatorNotes) return creatorNotes;
@@ -109,11 +132,7 @@ function CharacterLibraryDetailCard({
               src={character.avatarPath}
               alt={characterName || "Selected character"}
               className="h-full w-full object-cover"
-              style={getAvatarCropStyle(
-                character.parsed.extensions?.avatarCrop as
-                  | AvatarCropValue
-                  | undefined,
-              )}
+              style={getAvatarCropStyle(character.parsed.extensions?.avatarCrop as AvatarCropValue | undefined)}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-white/85">
@@ -219,12 +238,15 @@ export function CharacterLibraryView() {
   }, [characters]);
 
   const filteredCharacters = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = parseCharacterSearchQuery(search);
 
     return parsedCharacters.filter((char) => {
       const isFavorite = !!char.parsed.extensions?.fav;
       if (favoritesOnly && !isFavorite) return false;
-      if (!query) return true;
+      const tags = getCharacterTags(char);
+      const tagSet = new Set(tags.map((tag) => tag.toLowerCase()));
+      if (query.excludedTags.some((tag) => tagSet.has(tag))) return false;
+      if (!query.text) return true;
 
       const fields = [
         getText(char.parsed.name),
@@ -233,10 +255,10 @@ export function CharacterLibraryView() {
         getText(char.parsed.description),
         getText(char.parsed.creator_notes),
         getText(char.parsed.personality),
-        ...((Array.isArray(char.parsed.tags) ? char.parsed.tags : []) as string[]),
+        ...tags,
       ];
 
-      return fields.some((value) => value.toLowerCase().includes(query));
+      return fields.some((value) => value.toLowerCase().includes(query.text));
     });
   }, [favoritesOnly, parsedCharacters, search]);
 
@@ -339,7 +361,7 @@ export function CharacterLibraryView() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search names, tags, creator notes, or descriptions"
+              placeholder='Search names, tags, descriptions, or -tag:"tag name"'
               className="w-full rounded-2xl border border-[var(--border)]/60 bg-[var(--secondary)]/80 py-2 pl-8.5 pr-3 text-[0.8125rem] outline-none transition-colors placeholder:text-[var(--muted-foreground)]/70 focus:border-[var(--primary)]/40 focus:ring-1 focus:ring-[var(--primary)]/20 md:py-2.5 md:pl-9 md:text-sm"
             />
           </div>
@@ -411,7 +433,7 @@ export function CharacterLibraryView() {
                 const cardSummary = truncateText(getCharacterSummary(char), 180);
                 const cardMeta = getCharacterMeta(char);
                 const isFavorite = !!char.parsed.extensions?.fav;
-                const tags = ((Array.isArray(char.parsed.tags) ? char.parsed.tags : []) as string[]).filter(Boolean);
+                const tags = getCharacterTags(char);
                 const isActive = selectedCharacterId === char.id;
 
                 return (
@@ -434,9 +456,7 @@ export function CharacterLibraryView() {
                             loading="lazy"
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                             style={getAvatarCropStyle(
-                              char.parsed.extensions?.avatarCrop as
-                                | AvatarCropValue
-                                | undefined,
+                              char.parsed.extensions?.avatarCrop as AvatarCropValue | undefined,
                             )}
                           />
                         ) : (
